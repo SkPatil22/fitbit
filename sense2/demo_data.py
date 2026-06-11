@@ -90,10 +90,20 @@ class DemoClient:
         rem = max(30, round(rng.gauss(102, 14) - 15 * illness))
         wake = round(rng.gauss(38, 8) + 15 * illness)
         asleep = deep + light + rem
+
+        # Bedtime drifts night to night; Fri/Sat nights run notably later, which
+        # gives the sleep-rhythm analytics (social jetlag, SRI) something real.
+        prev = date - dt.timedelta(days=1)
+        trng = _rng(date, "sleeptime")
+        bed_minute = 22 * 60 + 40 + round(trng.gauss(35, 20))
+        if prev.weekday() in (4, 5):  # Friday or Saturday night
+            bed_minute += round(trng.gauss(75, 25))
+        start_dt = dt.datetime.combine(prev, dt.time(0, 0)) + dt.timedelta(minutes=bed_minute)
+        end_dt = start_dt + dt.timedelta(minutes=asleep + wake)
         return {
             "date": str(date),
-            "start": f"{(date - dt.timedelta(days=1)).isoformat()}T23:08:00.000",
-            "end": f"{date.isoformat()}T06:45:00.000",
+            "start": start_dt.isoformat(timespec="seconds") + ".000",
+            "end": end_dt.isoformat(timespec="seconds") + ".000",
             "minutes_asleep": asleep,
             "efficiency": max(70, min(98, round(100 * asleep / (asleep + wake)))),
             "stages": {"deep": deep, "light": light, "rem": rem, "wake": wake},
@@ -157,12 +167,37 @@ class DemoClient:
             for d in self._dates(start, end)
         ]
 
+    def steps_series(self, start: dt.date, end: dt.date) -> list[dict]:
+        out = []
+        for d in self._dates(start, end):
+            rng = _rng(d, "daysteps")
+            base = 9500 if d.weekday() >= 5 else 8200  # longer weekend walks
+            steps = max(
+                500,
+                round(rng.gauss(base, 2200) * (1 - 0.45 * self._illness_factor(d))),
+            )
+            out.append({"date": str(d), "steps": steps})
+        return out
+
+    def azm_series(self, start: dt.date, end: dt.date) -> list[dict]:
+        out = []
+        for d in self._dates(start, end):
+            rng = _rng(d, "azm")
+            azm = max(0, round(rng.gauss(45, 18) * (1 - 0.6 * self._illness_factor(d))))
+            out.append({"date": str(d), "azm": azm})
+        return out
+
     def sleep_series(self, start: dt.date, end: dt.date) -> list[dict]:
-        return [
-            {
-                "date": str(d),
-                "minutes_asleep": self.sleep_summary(d)["minutes_asleep"],
-                "efficiency": self.sleep_summary(d)["efficiency"],
-            }
-            for d in self._dates(start, end)
-        ]
+        out = []
+        for d in self._dates(start, end):
+            s = self.sleep_summary(d)
+            out.append(
+                {
+                    "date": str(d),
+                    "minutes_asleep": s["minutes_asleep"],
+                    "efficiency": s["efficiency"],
+                    "start": s["start"],
+                    "end": s["end"],
+                }
+            )
+        return out

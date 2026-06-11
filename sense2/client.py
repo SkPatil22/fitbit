@@ -179,6 +179,25 @@ class FitbitClient:
             if d.get("value", {}).get("nightlyRelative") is not None
         ]
 
+    def steps_series(self, start: dt.date, end: dt.date) -> list[dict]:
+        data = self._get(f"/1/user/-/activities/steps/date/{start}/{end}.json")
+        return [
+            {"date": d["dateTime"], "steps": int(d["value"])}
+            for d in data.get("activities-steps", [])
+        ]
+
+    def azm_series(self, start: dt.date, end: dt.date) -> list[dict]:
+        data = self._get(
+            f"/1/user/-/activities/active-zone-minutes/date/{start}/{end}.json"
+        )
+        return [
+            {
+                "date": d["dateTime"],
+                "azm": d.get("value", {}).get("activeZoneMinutes", 0),
+            }
+            for d in data.get("activities-active-zone-minutes", [])
+        ]
+
     def sleep_series(self, start: dt.date, end: dt.date) -> list[dict]:
         data = self._get(f"/1.2/user/-/sleep/date/{start}/{end}.json")
         out = []
@@ -189,6 +208,8 @@ class FitbitClient:
                         "date": s.get("dateOfSleep"),
                         "minutes_asleep": s.get("minutesAsleep"),
                         "efficiency": s.get("efficiency"),
+                        "start": s.get("startTime"),
+                        "end": s.get("endTime"),
                     }
                 )
         return sorted(out, key=lambda d: d["date"])

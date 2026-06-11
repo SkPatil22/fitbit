@@ -63,6 +63,25 @@
       <h2>30-day trends</h2>
       <div id="trendGrid" class="trend-grid"></div>
     </section>
+
+    <section class="card wide">
+      <h2>Training load &amp; rhythm — 28 days</h2>
+      <div class="cards">
+        <div>
+          <div class="stat-row">
+            <div><span class="stat" id="tlFitness"></span><span class="muted">fitness</span></div>
+            <div><span class="stat" id="tlFatigue"></span><span class="muted">fatigue</span></div>
+            <div><span class="stat" id="tlForm"></span><span class="muted" id="tlLabel">form</span></div>
+          </div>
+          <figure id="trimpFigure"><figcaption class="muted">Daily training load (TRIMP)</figcaption></figure>
+          <p id="tlAdvice" class="muted"></p>
+        </div>
+        <div>
+          <table id="rhythmTable"></table>
+          <p id="tempSummary" class="muted"></p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="muted">Data via the Fitbit Web API · stress &amp; readiness are estimates, not medical advice.</footer>

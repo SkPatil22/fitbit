@@ -104,10 +104,11 @@ function sparkline(values, labels, color) {
 
 async function load(dateStr) {
   const q = dateStr ? `?date=${dateStr}` : "";
-  const [overview, intraday, trends] = await Promise.all([
+  const [overview, intraday, trends, insights] = await Promise.all([
     fetch(`/api/overview${q}`).then((r) => r.json()),
     fetch(`/api/intraday${q}`).then((r) => r.json()),
     fetch(`/api/trends${q ? q + "&" : "?"}days=30`).then((r) => r.json()),
+    fetch(`/api/insights${q ? q + "&" : "?"}days=28`).then((r) => r.json()),
   ]);
 
   qs("datePicker").value = overview.date;
@@ -178,6 +179,27 @@ async function load(dateStr) {
     fig.appendChild(sparkline(values, labels, color));
     grid.appendChild(fig);
   }
+
+  // training load & rhythm insights
+  const t = insights.training;
+  qs("tlFitness").textContent = t.fitness;
+  qs("tlFatigue").textContent = t.fatigue;
+  qs("tlForm").textContent = (t.form >= 0 ? "+" : "") + t.form;
+  qs("tlLabel").textContent = `form — ${t.label}`;
+  qs("tlAdvice").textContent = `${t.advice} Last 7 days: ${t.weekly_trimp} TRIMP.`;
+  const fig = qs("trimpFigure");
+  fig.querySelector("svg")?.remove();
+  fig.appendChild(sparkline(t.daily.map((d) => d.trimp), t.daily.map((d) => d.date), "var(--moderate)"));
+
+  const rh = insights.rhythm;
+  qs("rhythmTable").innerHTML = [
+    ["Sleep regularity (SRI)", rh.sri !== null ? `${rh.sri}/100` : "–"],
+    ["Social jetlag", rh.social_jetlag_minutes !== null ? `${rh.social_jetlag_minutes} min` : "–"],
+    ["Avg sleep midpoint", rh.avg_midpoint],
+    ["Sleep debt (14d)", `${Math.floor(rh.debt_minutes / 60)}h ${rh.debt_minutes % 60}m`],
+    ["Skin temp state", insights.temperature.state],
+  ].map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("");
+  qs("tempSummary").textContent = insights.temperature.summary;
 }
 
 qs("datePicker").addEventListener("change", (e) => load(e.target.value));

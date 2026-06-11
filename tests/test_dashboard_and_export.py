@@ -36,6 +36,14 @@ def test_intraday_endpoint():
     assert len(data["stress"]) == 1440
 
 
+def test_insights_endpoint():
+    data = _app().get(f"/api/insights?date={TODAY}&days=14").get_json()
+    assert data["training"]["fitness"] >= 0
+    assert len(data["training"]["daily"]) == 14
+    assert data["rhythm"]["sri"] is not None
+    assert data["temperature"]["state"] in {"baseline", "elevated"}
+
+
 def test_trends_endpoint():
     data = _app().get(f"/api/trends?date={TODAY}&days=14").get_json()
     assert len(data["resting_hr"]) == 14

@@ -6,6 +6,12 @@
     python -m sense2 readiness [--demo] [--date YYYY-MM-DD]
     python -m sense2 alerts    [--demo] [--date YYYY-MM-DD]
     python -m sense2 export    [--demo] [--days N] [--out DIR]
+    python -m sense2 session   [--demo] --from HH:MM --to HH:MM --label "..."
+    python -m sense2 training  [--demo] [--days N]
+    python -m sense2 rhythm    [--demo] [--days N]
+    python -m sense2 report    [--demo] [--days N] [--out FILE.html]
+    python -m sense2 journal   add|remove|list|analyze ...
+    python -m sense2 webhook   --url URL [--demo]
 """
 
 from __future__ import annotations
@@ -105,6 +111,86 @@ def cmd_export(args):
     print(f"Exported {rows} rows to {csv_path}")
 
 
+def cmd_session(args):
+    from .sessions import analyze_session, render_card
+
+    date = args.date or dt.date.today()
+    result = analyze_session(_client(args), date, args.start, args.end, args.label)
+    print("\n" + render_card(result))
+
+
+def cmd_training(args):
+    from .training import training_for_range
+
+    status = training_for_range(_client(args), args.date or dt.date.today(), days=args.days)
+    print(f"\nTraining load over {args.days} days (Banister TRIMP):")
+    print(f"  fitness (CTL) {status.fitness} · fatigue (ATL) {status.fatigue} · "
+          f"form (TSB) {status.form:+}  [{status.label}]")
+    print(f"  last 7 days: {status.weekly_trimp} TRIMP")
+    print(f"  {_spark([d.trimp for d in status.days])}")
+    today = status.days[-1]
+    zones = " | ".join(f"{k} {v}m" for k, v in today.zone_minutes.items() if v)
+    print(f"  today: {today.trimp} TRIMP ({zones or 'rest day'})")
+    print(f"  {status.advice}")
+
+
+def cmd_rhythm(args):
+    from .sleep_rhythm import rhythm_for_range
+    from .temp_rhythm import detect_shifts
+
+    end = args.date or dt.date.today()
+    rhythm = rhythm_for_range(_client(args), end, days=args.days)
+    print(f"\nSleep rhythm ({args.days} days): {rhythm.summary}")
+    print(f"  avg sleep midpoint {rhythm.avg_midpoint} over {rhythm.nights} nights")
+    temp = detect_shifts(
+        _client(args).skin_temp_series(end - dt.timedelta(days=args.days - 1), end)
+    )
+    print(f"Temperature: {temp.summary}")
+
+
+def cmd_report(args):
+    from .report import generate
+
+    out = generate(_client(args), args.date or dt.date.today(), args.days, Path(args.out))
+    print(f"Report written to {out}")
+
+
+def cmd_journal(args):
+    from .journal import Journal, analyze_tag, render_report
+
+    journal = Journal(Path(args.journal) if args.journal else None)
+    if args.action == "add":
+        journal.add(args.date or dt.date.today(), args.tag)
+        print(f"Tagged {args.date or dt.date.today()} with '{args.tag}'.")
+    elif args.action == "remove":
+        journal.remove(args.date or dt.date.today(), args.tag)
+        print(f"Removed '{args.tag}' from {args.date or dt.date.today()}.")
+    elif args.action == "list":
+        counts = journal.all_tags()
+        if not counts:
+            print("Journal is empty. Tag days with: python -m sense2 journal add <tag> --date ...")
+        for tag, n in counts.items():
+            print(f"  {tag}: {n} day(s)")
+    elif args.action == "analyze":
+        report = analyze_tag(
+            _client(args), journal, args.tag, args.date or dt.date.today(), days=args.days
+        )
+        print("\n" + render_report(report))
+
+
+def cmd_webhook(args):
+    from .automations import collect_events, deliver
+
+    client = _client(args)
+    events = collect_events(client, args.date or dt.date.today())
+    state = Path(args.state) if args.state else None
+    delivered = deliver(events, args.url, state_path=state)
+    print(f"{len(delivered)} new event(s) delivered to {args.url} "
+          f"({len(events) - len(delivered)} already sent).")
+    for e in delivered:
+        print(f"  → {e.event}: {e.payload}")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="sense2", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -128,6 +214,43 @@ def main(argv=None):
         **{
             "--days": {"type": int, "default": 30},
             "--out": {"default": "./sense2_export"},
+        },
+    )
+    add(
+        "session",
+        cmd_session,
+        **{
+            "--from": {"dest": "start", "required": True, "metavar": "HH:MM"},
+            "--to": {"dest": "end", "required": True, "metavar": "HH:MM"},
+            "--label": {"default": "Session"},
+        },
+    )
+    add("training", cmd_training, **{"--days": {"type": int, "default": 42}})
+    add("rhythm", cmd_rhythm, **{"--days": {"type": int, "default": 28}})
+    add(
+        "report",
+        cmd_report,
+        **{
+            "--days": {"type": int, "default": 30},
+            "--out": {"default": "sense2_wrapped.html"},
+        },
+    )
+    add(
+        "journal",
+        cmd_journal,
+        **{
+            "action": {"choices": ["add", "remove", "list", "analyze"]},
+            "tag": {"nargs": "?", "default": ""},
+            "--days": {"type": int, "default": 90},
+            "--journal": {"default": None, "help": "journal file path"},
+        },
+    )
+    add(
+        "webhook",
+        cmd_webhook,
+        **{
+            "--url": {"required": True},
+            "--state": {"default": None, "help": "state file path"},
         },
     )
 

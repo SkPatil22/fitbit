@@ -23,6 +23,18 @@ write-up of what's possible and what the community is building.
 | **Full API client** | `sense2/client.py` | Normalized access to every Sense 2 data type: intraday HR/steps, HRV, sleep, SpO₂, breathing rate, skin temp, ECG, VO₂max. |
 | **Demo mode** | `sense2/demo_data.py` | Deterministic synthetic data (including a simulated illness onset) so everything runs without a Fitbit account. |
 
+### Wave 2 — features sourced from X/Reddit community research
+
+| Feature | Module | What it does |
+|---|---|---|
+| **Session analyzer** | `sense2/sessions.py` | The viral "my heart rate during the horror movie" graphs: slice any time window, get avg/peak HR, stress, spike timestamps and a shareable text card with sparkline. |
+| **n=1 experiment journal** | `sense2/journal.py` | r/QuantifiedSelf-style: tag days (`alcohol`, `caffeine-pm`, `late-workout`…), then statistically compare nightly HRV/resting HR/sleep on tagged vs normal nights (Cohen's d + Welch t). |
+| **Training load** | `sense2/training.py` | Free rebuild of Fitbit Premium's "Cardio Load": minute-level Banister TRIMP from intraday HR, %HRR zone minutes, and the fitness/fatigue/form (CTL/ATL/TSB) impulse-response model. |
+| **Sleep rhythm** | `sense2/sleep_rhythm.py` | Sleep Regularity Index (0–100), social jetlag (free-vs-work-night sleep midpoint), and 14-day sleep debt. |
+| **Temp shift detection** | `sense2/temp_rhythm.py` | Detects sustained nightly skin-temperature shifts (≥0.3 °C for 3+ nights vs trailing baseline) — the pattern behind cycle tracking and fever onset. |
+| **Wrapped report** | `sense2/report.py` | Shareable standalone HTML report: totals, records, streaks, GitHub-style steps calendar heatmap, training/rhythm/temperature summaries. |
+| **Webhook bridge** | `sense2/automations.py` | Pushes `readiness_computed` / `health_alert` / `stress_episode` / `goal_hit` events as JSON to any webhook (Home Assistant, n8n, IFTTT), with dedupe state for cron use. |
+
 ## Quickstart (no Fitbit account needed)
 
 ```bash
@@ -33,6 +45,15 @@ python -m sense2 stress    --demo          # intraday stress in the terminal
 python -m sense2 readiness --demo
 python -m sense2 alerts    --demo          # demo simulates an illness onset
 python -m sense2 export    --demo --days 30
+
+# wave 2
+python -m sense2 session   --demo --from 21:00 --to 23:15 --label "Hereditary"
+python -m sense2 training  --demo --days 42
+python -m sense2 rhythm    --demo
+python -m sense2 report    --demo --days 60 --out wrapped.html
+python -m sense2 journal   add alcohol --date 2026-06-03
+python -m sense2 journal   analyze alcohol --demo --days 90
+python -m sense2 webhook   --demo --url https://homeassistant.local:8123/api/webhook/sense2
 ```
 
 ## Connecting your real Sense 2

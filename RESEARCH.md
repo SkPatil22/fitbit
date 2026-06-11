@@ -1,6 +1,6 @@
 # How people build for the Fitbit Sense 2 — research notes
 
-*Compiled June 2026.*
+*Compiled June 2026. Wave 2 (X/Reddit-sourced ideas) appended in §5.*
 
 ## 1. The hard constraint: no third-party apps on the watch
 
@@ -81,6 +81,65 @@ The watch's native EDA/stress score is **not** in the public API.
 Everything feasible without hacking watch firmware is implemented and tested
 in demo mode; plugging in real credentials (README) swaps the synthetic client
 for the live API with the identical interface.
+
+## 5. Wave 2 — ideas mined from X and Reddit culture
+
+Direct crawling of x.com and reddit.com is blocked, so these were gathered
+through secondary coverage, search snippets and the open-source projects the
+threads point at.
+
+1. **"My heart rate during X" graphs** — a persistent viral genre on X/TikTok:
+   HR traces during horror movies, proposals, interviews, penalty shootouts.
+   Fitbit itself leaned in, hiring a paid "Horror Heart Rate Analyst" to watch
+   13 horror films on-device ([Athletech](https://athletechnews.com/fitbit-conducting-horror-movie-heart-rate-study/),
+   [AV Club](https://www.avclub.com/a-company-is-willing-to-pay-you-1-300-to-watch-13-horr-1847672079));
+   bloggers chart movie-night HR ([racery](https://racery.com/blog/2017/01/06/fitbit-charge-wild-heart-calm-mind/)).
+   → `sense2/sessions.py` + `session` CLI (stats, spike timestamps, shareable card).
+2. **n=1 experiments** (r/QuantifiedSelf): does alcohol/caffeine/late training
+   tank my HRV? WHOOP's published population numbers (one drink ≈ HRV −7 ms,
+   RHR +3 bpm) made this mainstream
+   ([Outside Online](https://www.outsideonline.com/health/running/gear/health-gear/lcohol-hrv-resting-heart-rate-sleep/)).
+   → `sense2/journal.py`: tag days, compare following-night biometrics with
+   effect sizes and a significance heuristic.
+3. **Training load without the subscription** — Fitbit's "Cardio Load" is a
+   modified Banister TRIMP over heart-rate reserve, Premium-only
+   ([Fitbit help](https://support.google.com/fitbit/answer/15402655?hl=en-GB),
+   [arXiv](https://arxiv.org/html/2508.11613v1)); open implementations:
+   [choochoo](https://andrewcooke.github.io/choochoo/impulse.html),
+   [ff-perf](https://github.com/jjjkkkjjj/ff-perf),
+   [mechgt/training-load](https://github.com/mechgt/training-load).
+   → `sense2/training.py`: minute-level TRIMP + CTL/ATL/TSB with first-week
+   seeding.
+4. **Sleep regularity / social jetlag** — SRI (probability of same sleep state
+   24h apart) and social jetlag (free-vs-work-day sleep midpoint) are the two
+   research metrics the self-tracking crowd keeps reimplementing
+   ([Sleep as Android docs](https://sleep.urbandroid.org/docs/sleep/chrono_jetlag.html),
+   [Wikipedia](https://en.wikipedia.org/wiki/Social_jetlag),
+   [SLEEP Advances](https://academic.oup.com/sleepadvances/article/6/Supplement_1/A18/8271604)).
+   → `sense2/sleep_rhythm.py`.
+5. **Skin-temperature shift tracking** — big topic on the Fitbit forums; wrist
+   temperature surges match ovulation in ~82% of cycles, and fevers show the
+   same signature ([Wareable](https://www.wareable.com/fitbit/fitbit-skin-temperature-readings-set-for-huge-accuracy-boost),
+   [community thread](https://community.fitbit.com/t5/Sleep-Well/Skin-Temperature-interpretation/td-p/5594737)).
+   → `sense2/temp_rhythm.py`: sustained-shift detector with a baseline that
+   excludes already-elevated nights.
+6. **Calendar heatmaps & "Wrapped" posts** (r/dataisbeautiful) — e.g.
+   [erramirez/fitbitcalendar](https://github.com/erramirez/fitbitcalendar).
+   → `sense2/report.py`: standalone HTML with GitHub-style steps heatmap,
+   records and streaks.
+7. **Self-hosted pipelines** — the most-starred community pattern is
+   Fitbit → InfluxDB → Grafana
+   ([arpanghosh8453/fitbit-grafana](https://github.com/arpanghosh8453/fitbit-grafana),
+   [LeoMcA/fitbit-grafana](https://github.com/LeoMcA/fitbit-grafana),
+   [gofit](https://github.com/timatooth/gofit),
+   [Grafana dashboard](https://grafana.com/grafana/dashboards/12348-fitbit-api-exporter/)),
+   plus Home Assistant automation chatter. → `sense2/automations.py` webhook
+   bridge (works with HA/n8n/IFTTT) on top of the existing SQLite/CSV export.
+8. **Recovery-score sharing culture** — Whoop/Oura recovery screenshots beside
+   Strava activities normalized treating readiness as a social, shareable
+   number ([Strava×Oura](https://support.strava.com/hc/en-us/articles/6619564102157-Oura-and-Strava),
+   [athletedata](https://the5krunner.com/2026/04/30/athletedata-ai-coach/)) —
+   the readiness module plus the report/session cards cover the shareable-artifact side.
 
 ### Sources
 

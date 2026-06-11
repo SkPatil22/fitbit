@@ -8,7 +8,10 @@ from flask import Flask, jsonify, render_template, request
 
 from ..health_alerts import health_check
 from ..readiness import readiness_for_date
+from ..sleep_rhythm import rhythm_for_range
 from ..stress import stress_for_date
+from ..temp_rhythm import detect_shifts
+from ..training import training_for_range
 
 
 def create_app(client) -> Flask:
@@ -67,6 +70,43 @@ def create_app(client) -> Flask:
                 "heart": heart["samples"],
                 "resting_hr": heart["resting_hr"],
                 "stress": stress.samples,
+            }
+        )
+
+    @app.route("/api/insights")
+    def insights():
+        date = _date()
+        days = int(request.args.get("days", 28))
+        training = training_for_range(client, date, days=days)
+        rhythm = rhythm_for_range(client, date, days=days)
+        temp = detect_shifts(
+            client.skin_temp_series(date - dt.timedelta(days=days - 1), date)
+        )
+        return jsonify(
+            {
+                "training": {
+                    "fitness": training.fitness,
+                    "fatigue": training.fatigue,
+                    "form": training.form,
+                    "label": training.label,
+                    "advice": training.advice,
+                    "weekly_trimp": training.weekly_trimp,
+                    "daily": [
+                        {"date": d.date, "trimp": d.trimp} for d in training.days
+                    ],
+                },
+                "rhythm": {
+                    "sri": rhythm.sri,
+                    "social_jetlag_minutes": rhythm.social_jetlag_minutes,
+                    "avg_midpoint": rhythm.avg_midpoint,
+                    "debt_minutes": rhythm.debt_minutes,
+                    "summary": rhythm.summary,
+                },
+                "temperature": {
+                    "state": temp.current_state,
+                    "summary": temp.summary,
+                    "shifts": [vars(s) for s in temp.shifts],
+                },
             }
         )
 
