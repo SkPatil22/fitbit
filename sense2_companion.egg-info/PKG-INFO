@@ -1,3 +1,17 @@
+Metadata-Version: 2.4
+Name: sense2-companion
+Version: 1.0.0
+Summary: Companion suite for the Fitbit Sense 2: dashboard, stress/readiness analytics, illness alerts, AI coach
+License: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: flask>=3.0
+Requires-Dist: requests>=2.31
+Requires-Dist: waitress>=3.0
+Requires-Dist: anthropic>=0.69
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+
 # Sense 2 Companion
 
 Analytics and tooling for the **Fitbit Sense 2**, built on the Fitbit Web API.
@@ -63,23 +77,6 @@ python -m sense2 profile --demo                        # your sleep animal
 | **Temp shift detection** | `sense2/temp_rhythm.py` | Detects sustained nightly skin-temperature shifts (≥0.3 °C for 3+ nights vs trailing baseline) — the pattern behind cycle tracking and fever onset. |
 | **Wrapped report** | `sense2/report.py` | Shareable standalone HTML report: totals, records, streaks, GitHub-style steps calendar heatmap, training/rhythm/temperature summaries. |
 | **Webhook bridge** | `sense2/automations.py` | Pushes `readiness_computed` / `health_alert` / `stress_episode` / `goal_hit` events as JSON to any webhook (Home Assistant, n8n, IFTTT), with dedupe state for cron use. |
-
-## Run it as an always-on home server
-
-The suite installs as a package with a `sense2` command. `sense2 server` runs
-the dashboard on a production WSGI server (waitress) plus an hourly background
-sync into a local SQLite/CSV archive — built to run forever on a Raspberry Pi:
-
-```bash
-pip install .
-sense2 server --demo                 # dashboard on http://<host>:8400, LAN-visible
-sense2 server                        # real data (after `sense2 auth`)
-sense2 server --webhook-url URL      # also push events to Home Assistant/n8n
-```
-
-**Raspberry Pi:** follow [SETUP_PI.md](SETUP_PI.md) — a step-by-step guide
-written for a Claude instance to execute on the Pi (install → credentials →
-headless OAuth → systemd service via `deploy/sense2.service` → verification).
 
 ## Quickstart (no Fitbit account needed)
 

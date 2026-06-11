@@ -14,6 +14,7 @@
     python -m sense2 webhook   --url URL [--demo]
     python -m sense2 profile   [--demo] [--days N]      # monthly sleep animal
     python -m sense2 coach     [--demo] ["question"]    # AI coach (needs ANTHROPIC_API_KEY)
+    python -m sense2 server    [--demo] [--host H] [--port P]  # always-on dashboard + sync
 """
 
 from __future__ import annotations
@@ -225,6 +226,24 @@ def cmd_coach(args):
         raise SystemExit(1)
 
 
+def cmd_server(args):
+    import logging
+
+    from .server import serve
+
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s"
+    )
+    serve(
+        _client(args),
+        host=args.host,
+        port=args.port,
+        sync_interval_min=args.sync_interval,
+        webhook_url=args.webhook_url,
+        data_dir=Path(args.data).expanduser(),
+    )
+
+
 def cmd_webhook(args):
     from .automations import collect_events, deliver
 
@@ -305,6 +324,21 @@ def main(argv=None):
         "coach",
         cmd_coach,
         **{"question": {"nargs": "*", "help": "one-shot question (omit for chat mode)"}},
+    )
+    add(
+        "server",
+        cmd_server,
+        **{
+            "--host": {"default": "0.0.0.0"},
+            "--port": {"type": int, "default": 8400},
+            "--sync-interval": {
+                "type": int,
+                "default": 60,
+                "help": "background sync interval in minutes (0 disables)",
+            },
+            "--webhook-url": {"default": None, "help": "forward events to this webhook"},
+            "--data": {"default": "~/.sense2", "help": "data directory (SQLite/CSV/state)"},
+        },
     )
 
     args = parser.parse_args(argv)

@@ -85,8 +85,9 @@ def collect_events(client, date: dt.date, steps_goal: int = STEPS_GOAL) -> list[
 
 
 def deliver(events: list[Event], url: str, state_path: Path | None = None,
-            post=requests.post) -> list[Event]:
+            post=None) -> list[Event]:
     """POST events not yet recorded in the state file; returns those sent."""
+    post = post or requests.post
     state_path = Path(state_path or DEFAULT_STATE_PATH)
     sent: set[str] = set(json.loads(state_path.read_text())) if state_path.exists() else set()
 

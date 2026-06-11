@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sense2-companion"
+version = "1.0.0"
+description = "Companion suite for the Fitbit Sense 2: dashboard, stress/readiness analytics, illness alerts, AI coach"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "flask>=3.0",
+    "requests>=2.31",
+    "waitress>=3.0",
+    "anthropic>=0.69",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+sense2 = "sense2.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["sense2*"]
+
+[tool.setuptools.package-data]
+sense2 = ["dashboard/templates/*", "dashboard/static/*"]

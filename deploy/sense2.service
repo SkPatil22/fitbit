@@ -1,0 +1,26 @@
+# Sense 2 Companion — systemd unit.
+#
+# Template: replace __USER__ and __HOME__ with the Pi user and home directory
+# (SETUP_PI.md walks through this). Install to /etc/systemd/system/sense2.service.
+
+[Unit]
+Description=Sense 2 Companion dashboard and sync server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+# FITBIT_CLIENT_ID / FITBIT_CLIENT_SECRET / ANTHROPIC_API_KEY live here:
+EnvironmentFile=-__HOME__/.sense2/env
+ExecStart=__HOME__/sense2-venv/bin/sense2 server --host 0.0.0.0 --port 8400
+Restart=on-failure
+RestartSec=15
+
+# Hardening (the service only needs to write under ~/.sense2)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

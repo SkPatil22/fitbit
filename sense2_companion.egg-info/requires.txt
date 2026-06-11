@@ -1,0 +1,7 @@
+flask>=3.0
+requests>=2.31
+waitress>=3.0
+anthropic>=0.69
+
+[dev]
+pytest>=8.0
