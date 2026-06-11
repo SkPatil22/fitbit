@@ -1,0 +1,73 @@
+:root {
+  --bg: #0f1420;
+  --card: #1a2232;
+  --text: #e8ecf4;
+  --muted: #8b96ab;
+  --accent: #4da3ff;
+  --calm: #3ecf8e;
+  --mild: #f5c84c;
+  --moderate: #f59a4c;
+  --high: #ef5a5a;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+}
+h1 { font-size: 20px; margin: 0; }
+h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.controls { display: flex; gap: 12px; align-items: center; }
+input[type="date"] {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid #2c3850;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+main { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 16px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+.card { background: var(--card); border-radius: 14px; padding: 16px; }
+.card.wide { width: 100%; }
+
+.banner { margin: 0 24px 16px; padding: 12px 16px; border-radius: 10px; font-size: 14px; }
+.banner.watch { background: #4a3b14; border: 1px solid var(--mild); }
+.banner.alert { background: #4a1d1d; border: 1px solid var(--high); }
+.hidden { display: none; }
+
+.stat { font-size: 28px; font-weight: 700; margin-right: 6px; }
+.stat-row { display: flex; gap: 24px; margin-bottom: 12px; }
+.big-label { font-size: 22px; font-weight: 700; margin: 4px 0; text-align: center; }
+.muted { color: var(--muted); font-size: 12px; }
+
+.gauge-wrap { display: flex; justify-content: center; }
+.gauge-wrap svg { width: 130px; height: 130px; }
+
+.parts { display: flex; gap: 8px; margin-top: 10px; }
+.parts div { flex: 1; background: #121826; border-radius: 8px; padding: 6px; text-align: center; font-size: 11px; color: var(--muted); }
+.parts b { display: block; font-size: 16px; color: var(--text); }
+
+.zone-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; margin: 8px 0; }
+.zone-bar div { height: 100%; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+td { padding: 5px 0; border-bottom: 1px solid #242f44; }
+td:last-child { text-align: right; font-weight: 600; }
+
+.episode { font-size: 12px; color: var(--muted); padding: 3px 0; }
+
+.trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.trend-grid figure { margin: 0; }
+.trend-grid figcaption { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.trend-grid svg { width: 100%; height: 80px; }
+
+footer { padding: 12px 24px 24px; }

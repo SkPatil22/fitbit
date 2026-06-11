@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sense 2 Companion</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Sense&nbsp;2 Companion</h1>
+    <div class="controls">
+      <span id="who"></span>
+      <input type="date" id="datePicker">
+    </div>
+  </header>
+
+  <div id="alertBanner" class="banner hidden"></div>
+
+  <main>
+    <section class="cards">
+      <div class="card" id="readinessCard">
+        <h2>Readiness</h2>
+        <div class="gauge-wrap"><svg id="readinessGauge" viewBox="0 0 120 120"></svg></div>
+        <p id="readinessLabel" class="big-label"></p>
+        <p id="readinessRec" class="muted"></p>
+        <div id="readinessParts" class="parts"></div>
+      </div>
+
+      <div class="card" id="stressCard">
+        <h2>Stress today</h2>
+        <div class="stat-row">
+          <div><span class="stat" id="stressAvg"></span><span class="muted">avg</span></div>
+          <div><span class="stat" id="stressPeak"></span><span class="muted">peak</span></div>
+        </div>
+        <div id="stressZones" class="zone-bar"></div>
+        <div id="stressEpisodes"></div>
+      </div>
+
+      <div class="card" id="vitalsCard">
+        <h2>Nightly vitals</h2>
+        <table id="vitalsTable"></table>
+      </div>
+
+      <div class="card" id="sleepCard">
+        <h2>Sleep</h2>
+        <div class="stat-row">
+          <div><span class="stat" id="sleepDuration"></span><span class="muted">asleep</span></div>
+          <div><span class="stat" id="sleepEff"></span><span class="muted">efficiency</span></div>
+        </div>
+        <div id="sleepStages" class="zone-bar"></div>
+        <p id="sleepStageLegend" class="muted"></p>
+      </div>
+    </section>
+
+    <section class="card wide">
+      <h2>Heart rate &amp; stress — intraday</h2>
+      <svg id="intradayChart" viewBox="0 0 960 260" preserveAspectRatio="none"></svg>
+      <p class="muted">Blue: heart rate (bpm). Orange fill: estimated stress (0–100). Grey bands: physical activity (masked from stress).</p>
+    </section>
+
+    <section class="card wide">
+      <h2>30-day trends</h2>
+      <div id="trendGrid" class="trend-grid"></div>
+    </section>
+  </main>
+
+  <footer class="muted">Data via the Fitbit Web API · stress &amp; readiness are estimates, not medical advice.</footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>
