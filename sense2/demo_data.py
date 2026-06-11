@@ -198,6 +198,7 @@ class DemoClient:
                     "efficiency": s["efficiency"],
                     "start": s["start"],
                     "end": s["end"],
+                    "stages": s["stages"],
                 }
             )
         return out

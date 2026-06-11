@@ -141,6 +141,30 @@ threads point at.
    [athletedata](https://the5krunner.com/2026/04/30/athletedata-ai-coach/)) —
    the readiness module plus the report/session cards cover the shareable-artifact side.
 
+## 6. Wave 3 — Fitbit Premium feature research
+
+What Premium (renamed "Google Health Premium" in May 2026) actually gates, and
+feasibility of recreating each from Web API data:
+
+- **Gemini Personal Health Coach** — the headline 2025/26 Premium feature: an
+  all-in-one trainer/sleep coach/wellness advisor that builds custom workout
+  routines from your goals and data
+  ([TechCrunch](https://techcrunch.com/2025/10/27/fitbits-revamped-app-with-gemini-powered-health-coach-rolls-out-to-premium-users/),
+  [Google blog](https://blog.google/products-and-platforms/devices/fitbit/personal-health-coach-public-preview/),
+  [Android Central](https://www.androidcentral.com/wearables/fitbit/new-fitbit-personal-health-coach-preview-arrives-tomorrow-heres-how-it-works)).
+  → recreated as `sense2/coach.py`: Claude Haiku 4.5 chat grounded in the
+  repo's computed metrics, with tool-use escalation to Claude Sonnet 4.6 for
+  plans and deep analysis.
+- **Sleep Profile** — monthly analysis across 10 sleep metrics assigning one
+  of six "sleep animals" ([WearableBeat](https://wearablebeat.com/articles/fitbit-premium-vs-free-is-the-subscription-worth-it/)).
+  → recreated as `sense2/sleep_profile.py` from duration, midpoint
+  consistency, deep/REM share and efficiency.
+- **Daily Readiness, Cardio Load, stress details, Wellness Report** — already
+  recreated in waves 1–2 (`readiness.py`, `training.py`, `stress.py`,
+  `report.py`).
+- **Snore & noise detection** — requires the watch microphone at night; no
+  API surface exists, so it cannot be recreated off-device.
+
 ### Sources
 
 - https://9to5google.com/2023/02/17/fitbit-studio/

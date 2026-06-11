@@ -12,6 +12,8 @@
     python -m sense2 report    [--demo] [--days N] [--out FILE.html]
     python -m sense2 journal   add|remove|list|analyze ...
     python -m sense2 webhook   --url URL [--demo]
+    python -m sense2 profile   [--demo] [--days N]      # monthly sleep animal
+    python -m sense2 coach     [--demo] ["question"]    # AI coach (needs ANTHROPIC_API_KEY)
 """
 
 from __future__ import annotations
@@ -178,6 +180,51 @@ def cmd_journal(args):
         print("\n" + render_report(report))
 
 
+def cmd_profile(args):
+    from .sleep_profile import profile_for_range
+
+    profile = profile_for_range(_client(args), args.date or dt.date.today(), days=args.days)
+    if not profile:
+        print("Not enough sleep data for a profile (need 10+ nights).")
+        return
+    print(f"\nSleep profile ({profile.nights} nights): "
+          f"{profile.emoji} {profile.animal.upper()}")
+    print(f"  {profile.description}")
+    print(f"  avg sleep {profile.avg_duration_min // 60}h{profile.avg_duration_min % 60:02d} · "
+          f"midpoint {profile.avg_midpoint} (±{profile.midpoint_std_min}min) · "
+          f"deep {profile.deep_pct}% · REM {profile.rem_pct}% · "
+          f"efficiency {profile.avg_efficiency}%")
+
+
+def cmd_coach(args):
+    from .coach import CoachError, CoachSession
+
+    session = CoachSession(_client(args), date=args.date or dt.date.today())
+    question = " ".join(args.question) if args.question else None
+
+    def ask(text):
+        reply = session.ask(text)
+        prefix = "coach (with specialist) ⚡" if reply.used_specialist else "coach"
+        print(f"\n{prefix}: {reply.text}\n")
+
+    try:
+        if question:
+            ask(question)
+            return
+        print("Sense 2 coach — ask away (Ctrl-D or 'exit' to quit).")
+        while True:
+            try:
+                text = input("you: ").strip()
+            except EOFError:
+                break
+            if not text or text.lower() in {"exit", "quit"}:
+                break
+            ask(text)
+    except CoachError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(1)
+
+
 def cmd_webhook(args):
     from .automations import collect_events, deliver
 
@@ -252,6 +299,12 @@ def main(argv=None):
             "--url": {"required": True},
             "--state": {"default": None, "help": "state file path"},
         },
+    )
+    add("profile", cmd_profile, **{"--days": {"type": int, "default": 28}})
+    add(
+        "coach",
+        cmd_coach,
+        **{"question": {"nargs": "*", "help": "one-shot question (omit for chat mode)"}},
     )
 
     args = parser.parse_args(argv)

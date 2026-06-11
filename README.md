@@ -23,6 +23,35 @@ write-up of what's possible and what the community is building.
 | **Full API client** | `sense2/client.py` | Normalized access to every Sense 2 data type: intraday HR/steps, HRV, sleep, SpO₂, breathing rate, skin temp, ECG, VO₂max. |
 | **Demo mode** | `sense2/demo_data.py` | Deterministic synthetic data (including a simulated illness onset) so everything runs without a Fitbit account. |
 
+### Wave 3 — Fitbit Premium recreations + AI coach
+
+Fitbit gates its best analytics behind Premium (now "Google Health Premium"). Map of what this repo recreates for free:
+
+| Premium feature | Status here |
+|---|---|
+| Daily Readiness Score | ✅ `sense2/readiness.py` |
+| Cardio Load / Target Load | ✅ `sense2/training.py` (Banister TRIMP + form) |
+| Stress Management details | ✅ `sense2/stress.py` |
+| Wellness Report | ✅ `sense2/report.py` |
+| **Sleep Profile (sleep animal)** | ✅ `sense2/sleep_profile.py` — monthly analysis assigning bear/dolphin/giraffe/hedgehog/parrot/tortoise from duration, schedule consistency, deep/REM share, efficiency |
+| **Gemini personal health coach** | ✅ `sense2/coach.py` — Claude-powered coach (see below) |
+| Guided workout programs | ✅ via the coach's specialist workout-plan generation |
+| Snore & noise detection | ❌ impossible off-device (needs the watch microphone) |
+
+**The AI coach** (`python -m sense2 coach`, or the chat panel in the dashboard): a fast
+model (Claude Haiku 4.5) answers grounded in your live Sense 2 data — readiness, stress,
+training load, sleep rhythm, alerts — and carries a `consult_specialist` tool that
+escalates to Claude Sonnet 4.6 (with adaptive thinking) for heavyweight work like
+multi-week workout plans or deep multi-metric analysis. Requires `ANTHROPIC_API_KEY`
+(get one at <https://platform.claude.com>); everything else in the repo works without it.
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+python -m sense2 coach --demo                          # interactive chat
+python -m sense2 coach --demo "Build me a 4-week 10k plan"
+python -m sense2 profile --demo                        # your sleep animal
+```
+
 ### Wave 2 — features sourced from X/Reddit community research
 
 | Feature | Module | What it does |

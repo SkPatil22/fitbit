@@ -200,7 +200,59 @@ async function load(dateStr) {
     ["Skin temp state", insights.temperature.state],
   ].map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("");
   qs("tempSummary").textContent = insights.temperature.summary;
+
+  const sp = insights.sleep_profile;
+  qs("sleepProfile").textContent = sp
+    ? `Sleep profile: ${sp.emoji} ${sp.animal} — ${sp.description}`
+    : "Sleep profile: not enough nights yet.";
 }
+
+// ---- coach chat ----
+function addChatMsg(role, text, badge) {
+  const log = qs("chatLog");
+  const div = document.createElement("div");
+  div.className = `chat-msg ${role}`;
+  if (badge) {
+    const b = document.createElement("span");
+    b.className = "badge";
+    b.textContent = badge;
+    div.appendChild(b);
+    div.appendChild(document.createElement("br"));
+  }
+  div.appendChild(document.createTextNode(text));
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+qs("chatForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const input = qs("chatInput");
+  const button = qs("chatForm").querySelector("button");
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = "";
+  addChatMsg("user", message);
+  const pending = addChatMsg("coach", "Thinking…");
+  button.disabled = true;
+  try {
+    const resp = await fetch("/api/coach", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+    const data = await resp.json();
+    pending.remove();
+    if (data.error) addChatMsg("coach", `⚠ ${data.error}`);
+    else addChatMsg("coach", data.reply, data.used_specialist ? "⚡ specialist consulted" : null);
+  } catch (err) {
+    pending.remove();
+    addChatMsg("coach", `⚠ Request failed: ${err}`);
+  } finally {
+    button.disabled = false;
+    input.focus();
+  }
+});
 
 qs("datePicker").addEventListener("change", (e) => load(e.target.value));
 load();

@@ -203,6 +203,7 @@ class FitbitClient:
         out = []
         for s in data.get("sleep", []):
             if s.get("isMainSleep"):
+                stages = s.get("levels", {}).get("summary", {})
                 out.append(
                     {
                         "date": s.get("dateOfSleep"),
@@ -210,6 +211,10 @@ class FitbitClient:
                         "efficiency": s.get("efficiency"),
                         "start": s.get("startTime"),
                         "end": s.get("endTime"),
+                        "stages": {
+                            k: stages.get(k, {}).get("minutes", 0)
+                            for k in ("deep", "light", "rem", "wake")
+                        },
                     }
                 )
         return sorted(out, key=lambda d: d["date"])

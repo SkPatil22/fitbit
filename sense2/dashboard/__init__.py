@@ -6,17 +6,20 @@ import datetime as dt
 
 from flask import Flask, jsonify, render_template, request
 
+from ..coach import CoachError, CoachSession
 from ..health_alerts import health_check
 from ..readiness import readiness_for_date
+from ..sleep_profile import profile_for_range
 from ..sleep_rhythm import rhythm_for_range
 from ..stress import stress_for_date
 from ..temp_rhythm import detect_shifts
 from ..training import training_for_range
 
 
-def create_app(client) -> Flask:
+def create_app(client, coach_session: CoachSession | None = None) -> Flask:
     app = Flask(__name__)
     app.config["CLIENT"] = client
+    app.config["COACH"] = coach_session
 
     def _date() -> dt.date:
         raw = request.args.get("date")
@@ -107,7 +110,27 @@ def create_app(client) -> Flask:
                     "summary": temp.summary,
                     "shifts": [vars(s) for s in temp.shifts],
                 },
+                "sleep_profile": (
+                    vars(sleep_profile)
+                    if (sleep_profile := profile_for_range(client, date)) else None
+                ),
             }
+        )
+
+    @app.route("/api/coach", methods=["POST"])
+    def coach():
+        payload = request.get_json(silent=True) or {}
+        message = (payload.get("message") or "").strip()
+        if not message:
+            return jsonify({"error": "empty message"}), 400
+        if app.config["COACH"] is None:
+            app.config["COACH"] = CoachSession(client)
+        try:
+            reply = app.config["COACH"].ask(message)
+        except CoachError as exc:
+            return jsonify({"error": str(exc)}), 503
+        return jsonify(
+            {"reply": reply.text, "used_specialist": reply.used_specialist}
         )
 
     @app.route("/api/trends")

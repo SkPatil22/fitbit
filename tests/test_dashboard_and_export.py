@@ -42,6 +42,42 @@ def test_insights_endpoint():
     assert len(data["training"]["daily"]) == 14
     assert data["rhythm"]["sri"] is not None
     assert data["temperature"]["state"] in {"baseline", "elevated"}
+    assert data["sleep_profile"]["animal"]
+
+
+def test_coach_endpoint_with_injected_session():
+    from types import SimpleNamespace
+
+    from sense2.coach import CoachSession
+    from sense2.dashboard import create_app
+
+    fake = SimpleNamespace(
+        messages=SimpleNamespace(
+            create=lambda **kwargs: SimpleNamespace(
+                content=[SimpleNamespace(type="text", text="Looking good!")],
+                stop_reason="end_turn",
+            )
+        )
+    )
+    demo = DemoClient(today=TODAY)
+    session = CoachSession(demo, date=TODAY, anthropic_client=fake)
+    app = create_app(demo, coach_session=session)
+    app.testing = True
+    web = app.test_client()
+
+    resp = web.post("/api/coach", json={"message": "How am I doing?"})
+    assert resp.status_code == 200
+    assert resp.get_json() == {"reply": "Looking good!", "used_specialist": False}
+
+    assert web.post("/api/coach", json={"message": ""}).status_code == 400
+
+
+def test_coach_endpoint_degrades_without_api_key(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+    resp = _app().post("/api/coach", json={"message": "hello"})
+    assert resp.status_code == 503
+    assert "ANTHROPIC_API_KEY" in resp.get_json()["error"]
 
 
 def test_trends_endpoint():

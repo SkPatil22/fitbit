@@ -79,8 +79,23 @@
         <div>
           <table id="rhythmTable"></table>
           <p id="tempSummary" class="muted"></p>
+          <p id="sleepProfile" class="muted"></p>
         </div>
       </div>
+    </section>
+
+    <section class="card wide">
+      <h2>Coach</h2>
+      <div id="chatLog" class="chat-log">
+        <div class="chat-msg coach">Hi! I'm your Sense 2 coach — I can see your readiness,
+        stress, sleep and training data. Ask me anything, or ask for a workout plan and
+        I'll bring in the specialist model. <span class="muted">(Requires ANTHROPIC_API_KEY
+        on the server.)</span></div>
+      </div>
+      <form id="chatForm" class="chat-form">
+        <input id="chatInput" type="text" placeholder="e.g. How recovered am I? Build me a 4-week 10k plan…" autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
     </section>
   </main>
 
